@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tempo", "Tempo\Tempo.csproj", "{7CE3AABB-9F85-4FBE-8D5F-B47E27D61195}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tryouts", "Tryouts\Tryouts.csproj", "{8DD6EBD3-3A52-4A67-A178-FD52F4AB0993}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7CE3AABB-9F85-4FBE-8D5F-B47E27D61195}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CE3AABB-9F85-4FBE-8D5F-B47E27D61195}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CE3AABB-9F85-4FBE-8D5F-B47E27D61195}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CE3AABB-9F85-4FBE-8D5F-B47E27D61195}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8DD6EBD3-3A52-4A67-A178-FD52F4AB0993}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DD6EBD3-3A52-4A67-A178-FD52F4AB0993}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DD6EBD3-3A52-4A67-A178-FD52F4AB0993}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DD6EBD3-3A52-4A67-A178-FD52F4AB0993}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
