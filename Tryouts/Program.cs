@@ -17,35 +17,52 @@ namespace Tryouts
 			{
 
 				var sp = Stopwatch.StartNew();
+				var writer = Task.Run(() =>
+				{
+					int count = 0;
+					while (sp.ElapsedMilliseconds < 30 * 1000)
+					{
+						var now = DateTime.Now;
+						using (var w = tss.CreateWriter())
+						{
+							for (int j = 0; j < 8; j++)
+							{
+								var key = j.ToString();
+								for (int i = 0; i < 1000; i++)
+								{
+									count++;
+									w.AppendHeartbeat(key, now = now.AddMilliseconds(1), 120);
 
-				var tasks = new List<Task>();
+								}
+							}
+							w.Commit();
+						}
+					}
+					return count;
+				});
 
-				int count = 0;
+				var tasks = new List<Task<int>>();
 				for (int i = 0; i < 8; i++)
 				{
 					var key = i.ToString();
-					tasks.Add(Task.Run(() =>
+					var task = Task.Run(() =>
 					{
-						var now = DateTime.Now;
-						while (sp.ElapsedMilliseconds <30* 1000)
+						using (var reader = tss.CreateReader())
 						{
-							now = now.AddMinutes(1);
-							using (var w = tss.CreateWriter())
-							{
-								w.AppendHeartbeat(key, now, 5);
-								w.Commit();
-								Interlocked.Increment(ref count);
-							}
+							return reader.Query(key, DateTime.MinValue, DateTime.MaxValue).Count();
 						}
-					}));
+					});
+
+					tasks.Add(task);
 				}
 
 				Task.WaitAll(tasks.ToArray());
 
+				Console.WriteLine("{0:#,#}", writer.Result);
 
-				Console.WriteLine(sp.Elapsed);
-				Console.WriteLine("{0:#,#}", count);
+				Console.WriteLine(sp.ElapsedMilliseconds);
 
+				Console.WriteLine("{0:#,#}", tasks.Sum(x => x.Result));
 
 
 			}
