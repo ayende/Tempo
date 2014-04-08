@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Tempo;
 using Voron;
 
@@ -13,26 +16,37 @@ namespace Tryouts
 			using (var tss = new TimeSeriesStorage(StorageEnvironmentOptions.ForPath("test")))
 			{
 
-				using (var reader = tss.CreateReader())
+				var sp = Stopwatch.StartNew();
+
+				var tasks = new List<Task>();
+
+				int count = 0;
+				for (int i = 0; i < 8; i++)
 				{
-					double sum = 0;
-					var count = 0L;
-
-					var sp = Stopwatch.StartNew();
-					foreach (var heartbeat in reader.Query("five", DateTime.MinValue, DateTime.MaxValue))
+					var key = i.ToString();
+					tasks.Add(Task.Run(() =>
 					{
-						sum += heartbeat.Value;
-						count++;
-					}
-
-					Console.WriteLine("{0:#,#}", sp.ElapsedMilliseconds);
-					Console.WriteLine("{0:#,#}", count);
-					Console.WriteLine(sum);
-
+						var now = DateTime.Now;
+						while (sp.ElapsedMilliseconds <30* 1000)
+						{
+							now = now.AddMinutes(1);
+							using (var w = tss.CreateWriter())
+							{
+								w.AppendHeartbeat(key, now, 5);
+								w.Commit();
+								Interlocked.Increment(ref count);
+							}
+						}
+					}));
 				}
 
+				Task.WaitAll(tasks.ToArray());
 
-				
+
+				Console.WriteLine(sp.Elapsed);
+				Console.WriteLine("{0:#,#}", count);
+
+
 
 			}
 		}

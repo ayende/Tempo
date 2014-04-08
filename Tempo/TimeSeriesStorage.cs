@@ -96,32 +96,31 @@ namespace Tempo
 		public class Writer : IDisposable
 		{
 			private readonly TimeSeriesStorage _storage;
-			private readonly Transaction _tx;
+			private readonly WriteBatch _writeBatch;
 
 			public Writer(TimeSeriesStorage storage)
 			{
 				_storage = storage;
-				_tx = _storage._storageEnvironment.NewTransaction(TransactionFlags.ReadWrite);
+				_writeBatch = new WriteBatch();
 			}
 
 			public void AppendHeartbeat(string watchId, DateTime time, double value)
 			{
-				var tree = _tx.State.GetTree(_tx, watchId);
 				var key = EndianBitConverter.Big.GetBytes(time.Ticks);
 				var valueAsBytes = EndianBitConverter.Big.GetBytes(value);
 
-				tree.Add(_tx, new Slice(key), new MemoryStream(valueAsBytes));
+				_writeBatch.Add(new Slice(key), new MemoryStream(valueAsBytes), watchId);
 			}
 
 			public void Commit()
 			{
-				_tx.Commit();
+				_storage._storageEnvironment.Writer.Write(_writeBatch);
 			}
 
 			public void Dispose()
 			{
-				if (_tx != null)
-					_tx.Dispose();
+				if (_writeBatch != null)
+					_writeBatch.Dispose();
 			}
 		}
 
