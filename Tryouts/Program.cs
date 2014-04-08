@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using Tempo;
 using Voron;
 
@@ -11,36 +12,27 @@ namespace Tryouts
 		{
 			using (var tss = new TimeSeriesStorage(StorageEnvironmentOptions.ForPath("test")))
 			{
-				var sp = Stopwatch.StartNew();
 
-				int count = 0;
-				int txCount = 0;
-				DateTime now = DateTime.Now;
-				while (sp.ElapsedMilliseconds < 5 * 1000)
+				using (var reader = tss.CreateReader())
 				{
-					using (var w = tss.CreateWriter())
+					double sum = 0;
+					var count = 0L;
+
+					var sp = Stopwatch.StartNew();
+					foreach (var heartbeat in reader.Query("five", DateTime.MinValue, DateTime.MaxValue))
 					{
-						for (int i = 0; i < 1; i++)
-						{
-							now = now.AddMinutes(1);
-							//w.AppendHeartbeat("one", now, i);
-							//w.AppendHeartbeat("two", now, i);
-							//w.AppendHeartbeat("three", now, i);
-							//w.AppendHeartbeat("four", now, i);
-							w.AppendHeartbeat("five", now, i);
-							count += 1;
-						}
-						txCount++;
-						w.Commit();
+						sum += heartbeat.Value;
+						count++;
 					}
+
+					Console.WriteLine("{0:#,#}", sp.ElapsedMilliseconds);
+					Console.WriteLine("{0:#,#}", count);
+					Console.WriteLine(sum);
+
 				}
 
-				sp.Stop();
 
-				Console.WriteLine(sp.Elapsed);
-				Console.WriteLine("Num: {0:#,#}, Tx: {1:#,#}", count, txCount);
-
-				Console.WriteLine(Math.Round((double)count / sp.ElapsedMilliseconds, 4));
+				
 
 			}
 		}
