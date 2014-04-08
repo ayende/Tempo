@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Voron;
 using Voron.Impl;
@@ -31,9 +32,65 @@ namespace Tempo
 			}
 		}
 
+		public Reader CreateReader()
+		{
+			return new Reader(this);
+		}
+
 		public Writer CreateWriter()
 		{
 			return new Writer(this);
+		}
+
+		public class Heartbeat
+		{
+			public DateTime At;
+			public double Value;
+		}
+
+		public class Reader : IDisposable
+		{
+			private readonly TimeSeriesStorage _storage;
+			private readonly Transaction _tx;
+
+			public Reader(TimeSeriesStorage storage)
+			{
+				_storage = storage;
+				_tx = _storage._storageEnvironment.NewTransaction(TransactionFlags.Read);
+			}
+
+			public IEnumerable<Heartbeat> Query(string watchId, DateTime start, DateTime end)
+			{
+				var startBuffer = EndianBitConverter.Big.GetBytes(start.Ticks);
+				var endBuffer = EndianBitConverter.Big.GetBytes(end.Ticks);
+
+				var buffer = new byte[8];
+
+				var tree = _tx.State.GetTree(_tx, watchId);
+				using (var it = tree.Iterate(_tx))
+				{
+					it.MaxKey = new Slice(endBuffer);
+					if (it.Seek(new Slice(startBuffer)) == false)
+						yield break;
+
+					do
+					{
+						var reader = it.CreateReaderForCurrent();
+						reader.Read(buffer, 0, 8);
+						yield return new Heartbeat
+						{
+							At = new DateTime(it.CurrentKey.ToInt64()),
+							Value = EndianBitConverter.Big.ToDouble(buffer, 0)
+						};
+					} while (it.MoveNext());
+				}
+			}
+
+			public void Dispose()
+			{
+				if (_tx != null)
+					_tx.Dispose();
+			}
 		}
 
 		public class Writer : IDisposable
